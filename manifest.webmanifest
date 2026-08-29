@@ -1,0 +1,9 @@
+{
+  "name": "Estudos da Maya",
+  "short_name": "Estudos Maya",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fbf6ea",
+  "theme_color": "#6f2232",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
