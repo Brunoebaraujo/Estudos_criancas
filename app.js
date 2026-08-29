@@ -6,6 +6,8 @@ let screen = "home";
 let selected = null;
 let feedback = null;
 let progress = loadProgress();
+let optionOrderKey = "";
+let optionOrder = [];
 
 const kindLabels = {
   pista: "Caça à pista",
@@ -30,6 +32,24 @@ function saveProgress() {
 
 function questionById(id) { return studyModule.questions.find((q) => q.id === id); }
 function percent() { return Math.round(progress.mastered.length / studyModule.questions.length * 100); }
+
+function shuffledCopy(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function optionsFor(question) {
+  const key = `${question.id}:${progress.attempts[question.id] || 0}`;
+  if (optionOrderKey !== key) {
+    optionOrderKey = key;
+    optionOrder = shuffledCopy(question.options);
+  }
+  return optionOrder;
+}
 
 function go(next) { screen = next; selected = null; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
 
@@ -73,10 +93,11 @@ function renderIntro() {
 function renderQuestion() {
   const question = questionById(progress.queue[0]);
   if (!question) return go(progress.completed ? "complete" : "home");
+  const displayedOptions = optionsFor(question);
   app.innerHTML = `<header class="quiz-head"><div class="wrap row"><button id="exit" aria-label="Voltar ao menu">✕</button><div><small>${progress.mastered.length} dominadas · ${percent()}%</small><progress max="100" value="${percent()}"></progress></div></div></header>
     <section class="page wrap question"><div class="tags"><span>${kindLabels[question.kind]}</span><em>${question.chapter} · ${question.topic}</em></div>
     ${question.image ? `<figure><img src="${question.image.src}" alt="${question.image.alt}"><figcaption>${question.image.credit}</figcaption></figure>` : ""}
-    <h1>${question.prompt}</h1><div class="options">${question.options.map((option, index) => `<button data-id="${option.id}"><i>${String.fromCharCode(65 + index)}</i><span>${option.text}</span></button>`).join("")}</div></section>
+    <h1>${question.prompt}</h1><div class="options">${displayedOptions.map((option, index) => `<button data-id="${option.id}"><i>${String.fromCharCode(65 + index)}</i><span>${option.text}</span></button>`).join("")}</div></section>
     <footer class="action"><button class="primary" id="answer" disabled>Confirmar resposta</button></footer>`;
   document.querySelector("#exit").onclick = () => go("home");
   document.querySelectorAll(".options button").forEach((button) => button.onclick = () => {
