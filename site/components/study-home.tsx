@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, BookOpen, Brain, Check, CheckCircle2, ChevronRight, CircleAlert,
-  Clock3, History, Home, Lightbulb, Medal, RotateCcw, ScrollText, Sparkles, Target, X,
+  Calculator, Clock3, Home, Lightbulb, Medal, RotateCcw, ScrollText, Sparkles, Target, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -34,6 +34,9 @@ const kindLabels: Record<ChallengeKind, string> = {
   "linha-do-tempo": "Linha do tempo",
   "quem-sou-eu": "Quem sou eu?",
   conexao: "Faça a conexão",
+  calculo: "Hora de calcular",
+  problema: "Resolva o problema",
+  "desafio-mental": "Desafio mental",
 };
 
 const DEFAULT_MODULE_ID = "RecHist2Tri26";
@@ -245,15 +248,15 @@ function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProg
           </div>
           <div className="max-w-2xl">
             <p className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.15em] text-[#9a673e]"><Sparkles className="size-4" /> Central de revisão</p>
-            <h1 className="font-serif text-4xl font-black leading-[1.02] tracking-tight text-[#3c2418] sm:text-5xl">História não é decorar. É ligar as pistas.</h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-[#664733]">Resolva os desafios e reveja cada erro até dominar todo o conteúdo.</p>
+            <h1 className="font-serif text-4xl font-black leading-[1.02] tracking-tight text-[#3c2418] sm:text-5xl">Aprender é entender, testar e tentar de novo.</h1>
+            <p className="mt-4 max-w-xl text-base leading-7 text-[#664733]">Escolha uma matéria, resolva os desafios e reveja cada erro até dominar todo o conteúdo.</p>
           </div>
         </div>
       </header>
       <section className="mx-auto max-w-5xl px-5 pt-8" aria-labelledby="modules-heading">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div><p className="eyebrow">Biblioteca</p><h2 id="modules-heading" className="mt-1 font-serif text-2xl font-bold">Matérias disponíveis</h2></div>
-          <History className="size-7 text-[#b7803e]" />
+          <BookOpen className="size-7 text-[#b7803e]" />
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           {studyModules.map((module) => {
@@ -262,10 +265,10 @@ function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProg
             const modulePercent = Math.round((mastered / module.questionCount) * 100);
             return (
               <article key={module.id} className="overflow-hidden rounded-[1.75rem] border border-[#d6bd93] bg-[#fffdf7] shadow-[0_18px_50px_rgba(81,54,35,.10)]">
-                <div className="relative h-44 overflow-hidden bg-[#35251e]">
-                  <img src={module.coverImage} alt={module.coverAlt} className="h-full w-full object-cover object-[50%_28%] opacity-75" />
+                <div className="relative h-44 overflow-hidden bg-gradient-to-br from-[#402431] via-[#6f2232] to-[#b7803e]">
+                  {module.coverImage ? <img src={module.coverImage} alt={module.coverAlt ?? ""} className="h-full w-full object-cover object-[50%_28%] opacity-75" /> : <Calculator className="absolute right-6 top-6 size-24 text-white/15" />}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#302018] via-transparent to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5 text-[#fff9eb]"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8c68c]">História · 2º trimestre</p><h3 className="mt-1 font-serif text-2xl font-bold">{module.title}</h3></div>
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-[#fff9eb]"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8c68c]">{module.subject} · {module.period}</p><h3 className="mt-1 font-serif text-2xl font-bold">{module.title}</h3></div>
                 </div>
                 <div className="p-5">
                   <p className="text-sm leading-6 text-[#6c4d39]">{module.description}</p>
@@ -299,7 +302,7 @@ function IntroScreen({ module, progress, onBack, onBegin, onReset }: { module: S
       <section className="rounded-[2rem] border border-[#d6bd93] bg-[#fffdf7] p-6 shadow-[0_18px_60px_rgba(81,54,35,.10)] sm:p-8">
         <p className="eyebrow">{module.subtitle}</p><h1 className="mt-2 font-serif text-3xl font-black leading-tight">{module.title}</h1>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Stat icon={<Brain />} value={String(module.questions.length)} label="desafios" /><Stat icon={<ScrollText />} value="2" label="capítulos" /><Stat icon={<Target />} value="100%" label="para concluir" />
+          <Stat icon={<Brain />} value={String(module.questions.length)} label="desafios" /><Stat icon={<ScrollText />} value={String(module.chapterCount)} label="capítulos" /><Stat icon={<Target />} value="100%" label="para concluir" />
         </div>
         <div className="mt-7 rounded-2xl border border-[#e0c99f] bg-[#f8eedc] p-5"><h2 className="flex items-center gap-2 font-serif text-xl font-bold"><Lightbulb className="size-5 text-[#aa6f2c]" /> Como funciona</h2>
           <ol className="mt-3 space-y-3 text-sm leading-6 text-[#684a36]"><li><b>1.</b> Acertou? A pergunta fica dominada.</li><li><b>2.</b> Errou? Você recebe uma explicação específica.</li><li><b>3.</b> A pergunta volta no fim da fila, nunca logo depois.</li><li><b>4.</b> A revisão só termina quando todas estiverem certas.</li></ol>
@@ -361,8 +364,8 @@ function CompleteScreen({ module, progress, onHome, onRestart }: { module: Study
 }
 
 function SourcesScreen({ onBack }: { onBack: () => void }) {
-  return <main className="min-h-screen px-5 py-6"><section className="mx-auto max-w-2xl"><button onClick={onBack} className="mb-6 flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-5" /> Voltar ao menu</button><p className="eyebrow">Transparência</p><h1 className="mt-2 font-serif text-3xl font-black">Fontes do módulo</h1><p className="mt-3 text-sm leading-6 text-[#674a36]">As perguntas foram redigidas a partir do material da prova e revisadas para não adicionar fatos especulativos.</p>
-    <div className="mt-6 space-y-4"><SourceCard title="Material didático da escola" body="Capítulo 3, pp. 48–53, 56–58, 60 e 62; Capítulo 4, pp. 80–82; anotações e exercícios do caderno enviados em 29/08/2026." /><SourceCard title="Retratos históricos" body="Martinho Lutero (Lucas Cranach, 1529), João Calvino e Luís XIV (Hyacinthe Rigaud). Reproduções de obras em domínio público." links={[{ label: "Lutero — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Martin_Luther,_1529.jpg" }, { label: "Calvino — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Portrait_john_calvin.jpg" }, { label: "Luís XIV — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Louis_XIV_of_France.jpg" }]} /></div>
+  return <main className="min-h-screen px-5 py-6"><section className="mx-auto max-w-2xl"><button onClick={onBack} className="mb-6 flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-5" /> Voltar ao menu</button><p className="eyebrow">Transparência</p><h1 className="mt-2 font-serif text-3xl font-black">Fontes dos módulos</h1><p className="mt-3 text-sm leading-6 text-[#674a36]">As perguntas seguem o conteúdo programático informado. História usa as páginas e o caderno enviados; Matemática usa conceitos e cálculos verificáveis do 7º ano, sem reproduzir exemplos não fornecidos do livro.</p>
+    <div className="mt-6 space-y-4"><SourceCard title="História — material didático da escola" body="Capítulo 3, pp. 48–53, 56–58, 60 e 62; Capítulo 4, pp. 80–82; anotações e exercícios do caderno enviados em 29/08/2026." /><SourceCard title="Matemática — conteúdo programático" body="Capítulo 5, pp. 114–129, exceto 118–119; Capítulo 6, pp. 136–155; Capítulo 7, pp. 160–177. Questões originais baseadas nos conceitos listados para o 7º ano." /><SourceCard title="Retratos históricos" body="Martinho Lutero (Lucas Cranach, 1529), João Calvino e Luís XIV (Hyacinthe Rigaud). Reproduções de obras em domínio público." links={[{ label: "Lutero — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Martin_Luther,_1529.jpg" }, { label: "Calvino — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Portrait_john_calvin.jpg" }, { label: "Luís XIV — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Louis_XIV_of_France.jpg" }]} /></div>
     </section></main>;
 }
 

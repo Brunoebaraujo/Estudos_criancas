@@ -3,6 +3,9 @@ import { studyModuleRegistry } from "../content/registry";
 import { shuffledCopy } from "../lib/shuffle";
 
 for (const studyModule of Object.values(studyModuleRegistry)) {
+  assert.ok(studyModule.subject.trim(), `${studyModule.id}: matéria vazia`);
+  assert.ok(studyModule.period.trim(), `${studyModule.id}: período vazio`);
+  assert.ok(studyModule.chapterCount > 0, `${studyModule.id}: número de capítulos inválido`);
   assert.ok(studyModule.questions.length > 0, `${studyModule.id}: módulo vazio`);
   const ids = new Set(studyModule.questions.map((question) => question.id));
   assert.equal(ids.size, studyModule.questions.length, `${studyModule.id}: IDs de perguntas duplicados`);
@@ -28,6 +31,17 @@ assert.ok(history.questions.some((question) => question.topic.includes("Calvinis
 assert.ok(history.questions.some((question) => question.topic.includes("Absolutismo")), "Absolutismo não coberto");
 assert.ok(history.questions.some((question) => question.topic.includes("Guerra Civil")), "Guerra Civil Inglesa não coberta");
 
+const math = studyModuleRegistry.RecMat2Tri26;
+assert.equal(math.questions.length, 46, "RecMat2Tri26 deve ter 46 desafios");
+for (const topic of [
+  "Expressões algébricas", "Simplificação", "Equações", "Ideia de ângulo",
+  "Minutos e segundos", "Bissetriz", "complementares", "suplementares",
+  "opostos pelo vértice", "Paralelas e transversal", "Razão", "Velocidade média",
+  "Escala", "Densidade demográfica", "Proporção", "Regra de três", "Porcentagem",
+]) {
+  assert.ok(math.questions.some((question) => question.topic.toLowerCase().includes(topic.toLowerCase())), `Matemática: tópico não coberto — ${topic}`);
+}
+
 const sampleOptions = history.questions[0].options;
 const correctId = history.questions[0].correctOptionId;
 const sequence = (...values: number[]) => {
@@ -42,4 +56,5 @@ const possibleCorrectPositions = new Set([
 assert.deepEqual([...possibleCorrectPositions].sort(), [0, 1, 2], "a resposta correta deve poder aparecer em A, B ou C");
 assert.deepEqual(sampleOptions, history.questions[0].options, "o embaralhamento não pode alterar o conteúdo original");
 
-console.log(`Conteúdo validado: ${Object.keys(studyModuleRegistry).length} módulo, ${history.questions.length} perguntas, respostas aleatórias em A/B/C.`);
+const totalQuestions = Object.values(studyModuleRegistry).reduce((sum, module) => sum + module.questions.length, 0);
+console.log(`Conteúdo validado: ${Object.keys(studyModuleRegistry).length} módulos, ${totalQuestions} perguntas, respostas aleatórias em A/B/C.`);

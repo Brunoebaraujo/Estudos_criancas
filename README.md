@@ -7,13 +7,16 @@ Aplicação móvel de revisões escolares. A interface, o motor de exercícios e
 
 O código da versão publicada, incluindo telemetria e dashboard, está em [`site/`](site/). Os arquivos estáticos na raiz são preservados como versão anterior do aplicativo.
 
-## Módulo atual
+## Módulos atuais
 
 - `RecHist2Tri26`: Reformas Religiosas e Monarquias Europeias, 7º ano.
-- 36 desafios baseados nas páginas do livro e nas anotações do caderno.
+- `RecMat2Tri26`: Álgebra, Ângulos e Proporcionalidade, 7º ano.
+- 36 desafios de História baseados nas páginas do livro e nas anotações do caderno.
+- 46 desafios originais de Matemática baseados no conteúdo programático informado.
 - Uma pergunta errada recebe explicação e volta ao fim da fila.
 - O módulo só é concluído quando todas as perguntas forem respondidas corretamente.
 - O progresso é salvo no navegador e as novas sessões enviam indicadores pedagógicos para o dashboard protegido.
+- O dashboard permite visão consolidada ou filtro por matéria.
 
 ## Estrutura
 
@@ -22,6 +25,7 @@ O código da versão publicada, incluindo telemetria e dashboard, está em [`sit
 - `site/content/types.ts`: contrato de dados reutilizável.
 - `site/content/modules.ts`: catálogo exibido no menu inicial.
 - `site/content/rechist2tri26.ts`: perguntas e explicações do módulo.
+- `site/content/recmat2tri26.ts`: exercícios, respostas e explicações de Matemática.
 - `site/db/`: esquema das sessões e tentativas.
 - `site/public/manifest.webmanifest` e `site/public/sw.js`: instalação e funcionamento básico como PWA.
 

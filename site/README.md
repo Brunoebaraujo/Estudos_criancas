@@ -2,10 +2,12 @@
 
 Aplicação móvel de revisões escolares. A interface, o motor de exercícios e o conteúdo ficam separados para permitir novos módulos sem duplicar a aplicação.
 
-## Módulo atual
+## Módulos atuais
 
 - `RecHist2Tri26`: Reformas Religiosas e Monarquias Europeias, 7º ano.
-- 36 desafios baseados nas páginas do livro e nas anotações do caderno.
+- `RecMat2Tri26`: Álgebra, Ângulos e Proporcionalidade, 7º ano.
+- 36 desafios de História baseados nas páginas do livro e nas anotações do caderno.
+- 46 desafios originais de Matemática cobrindo o conteúdo programático informado.
 - Uma pergunta errada recebe explicação e volta ao fim da fila.
 - O módulo só é concluído quando todas as perguntas forem respondidas corretamente.
 - O progresso continua salvo no aparelho para permitir retomada e uso resiliente.
@@ -14,6 +16,7 @@ Aplicação móvel de revisões escolares. A interface, o motor de exercícios e
 ## Acompanhamento responsável
 
 - `/dashboard`: painel protegido por login para o responsável.
+- O painel pode ser filtrado por matéria ou exibir a visão consolidada.
 - D1 armazena sessões e tentativas de forma centralizada.
 - Indicadores: último acesso, acertos diretos, tentativas, conclusões, duração e perguntas com maior dificuldade.
 - O aplicativo registra apenas dados pedagógicos do perfil `maya`; não coleta localização, contatos ou conteúdo externo.

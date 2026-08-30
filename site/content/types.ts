@@ -1,4 +1,12 @@
-export type ChallengeKind = "pista" | "verdadeiro-ou-falso" | "linha-do-tempo" | "quem-sou-eu" | "conexao";
+export type ChallengeKind =
+  | "pista"
+  | "verdadeiro-ou-falso"
+  | "linha-do-tempo"
+  | "quem-sou-eu"
+  | "conexao"
+  | "calculo"
+  | "problema"
+  | "desafio-mental";
 
 export type QuestionOption = {
   id: string;
@@ -22,11 +30,14 @@ export type StudyQuestion = {
 
 export type StudyModule = {
   id: string;
+  subject: string;
+  period: string;
   title: string;
   subtitle: string;
   description: string;
-  coverImage: string;
-  coverAlt: string;
+  chapterCount: number;
+  coverImage?: string;
+  coverAlt?: string;
   questions: StudyQuestion[];
   reviewFacts: string[];
 };

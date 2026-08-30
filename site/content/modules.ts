@@ -2,15 +2,19 @@ import { studyModuleRegistry } from "./registry";
 
 export type StudyModuleSummary = {
   id: string;
+  subject: string;
+  period: string;
   title: string;
   description: string;
   questionCount: number;
-  coverImage: string;
-  coverAlt: string;
+  coverImage?: string;
+  coverAlt?: string;
 };
 
 export const studyModules: StudyModuleSummary[] = Object.values(studyModuleRegistry).map((module) => ({
   id: module.id,
+  subject: module.subject,
+  period: module.period,
   title: module.title,
   description: module.description,
   questionCount: module.questions.length,

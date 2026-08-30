@@ -2,11 +2,14 @@ import type { StudyModule } from "./types";
 
 export const recHist2Tri26: StudyModule = {
   id: "RecHist2Tri26",
+  subject: "História",
+  period: "2º trimestre de 2026",
   title: "Reformas Religiosas e Monarquias Europeias",
   subtitle: "Recuperação de História · 2º trimestre de 2026",
   description: "Da crítica às indulgências à concentração do poder real: personagens, ideias, conflitos e consequências.",
   coverImage: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Martin%20Luther%2C%201529.jpg?width=1200",
   coverAlt: "Retrato de Martinho Lutero pintado por Lucas Cranach, em 1529",
+  chapterCount: 2,
   reviewFacts: [
     "Lutero pretendia inicialmente reformar a Igreja, mas o conflito levou ao surgimento do luteranismo.",
     "Calvino defendia a predestinação: para ele, o destino da alma já teria sido determinado por Deus.",
