@@ -1,13 +1,14 @@
 import { env } from "cloudflare:workers";
 import Link from "next/link";
 import {
-  Activity, ArrowLeft, BarChart3, BookOpenCheck, Brain, CheckCircle2,
+  Activity, ArrowLeft, BarChart3, Beaker, BookOpenCheck, Brain, CheckCircle2,
   Clock3, LogOut, MousePointerClick, RotateCcw, ShieldCheck, Target,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { studyModuleRegistry } from "@/content/registry";
-import { chatGPTSignOutPath, requireChatGPTUser } from "@/app/chatgpt-auth";
+import { chatGPTSignOutPath } from "@/app/chatgpt-auth";
+import { getDashboardAccess } from "@/lib/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -108,10 +109,7 @@ function MetricCard({ icon, label, value, note }: { icon: React.ReactNode; label
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ module?: string }> }) {
-  const user = await requireChatGPTUser("/dashboard");
-  const runtimeEnv = env as typeof env & { ADMIN_EMAIL?: string };
-  const allowedEmail = runtimeEnv.ADMIN_EMAIL?.trim().toLowerCase();
-  const authorized = Boolean(allowedEmail && user.email.trim().toLowerCase() === allowedEmail);
+  const { authorized } = await getDashboardAccess("/dashboard");
 
   if (!authorized) return <main className="grid min-h-screen place-items-center bg-[#f6eddd] px-5"><section className="max-w-md rounded-3xl border border-[#d9c3a0] bg-white p-7 text-center shadow-xl"><ShieldCheck className="mx-auto size-12 text-[#6f2232]" /><h1 className="mt-4 font-serif text-3xl font-black">Acesso restrito</h1><p className="mt-3 text-sm leading-6 text-[#71523d]">Este painel contém o histórico escolar da Maya e está disponível somente para a conta responsável autorizada.</p><Link href="/" className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-4" /> Voltar aos estudos</Link></section></main>;
 
@@ -158,7 +156,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
     <div className="mx-auto max-w-6xl px-5 pt-7">
       <nav aria-label="Filtrar acompanhamento por matéria" className="mb-7 rounded-3xl border border-[#d8c4a2] bg-[#fffdf8] p-4">
-        <p className="mb-3 text-xs font-black uppercase tracking-[.14em] text-[#846047]">Matéria acompanhada</p>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.14em] text-[#846047]">Matéria acompanhada</p><Link href="/dashboard/teste" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#cfae7a] bg-[#fff8ea] px-3 text-xs font-black text-[#6f2232] hover:bg-[#f5e7ce]"><Beaker className="size-4" /> Testar exercícios</Link></div>
         <div className="flex flex-wrap gap-2">
           <Link href="/dashboard" aria-current={selectedModuleId === "all" ? "page" : undefined} className={selectedModuleId === "all" ? "rounded-full bg-[#6f2232] px-4 py-2 text-sm font-black text-white" : "rounded-full bg-[#f1e2c8] px-4 py-2 text-sm font-black text-[#6f2232] hover:bg-[#e7d2ae]"}>Todas</Link>
           {Object.values(studyModuleRegistry).map((module) => <Link key={module.id} href={"/dashboard?module=" + encodeURIComponent(module.id)} aria-current={selectedModuleId === module.id ? "page" : undefined} className={selectedModuleId === module.id ? "rounded-full bg-[#6f2232] px-4 py-2 text-sm font-black text-white" : "rounded-full bg-[#f1e2c8] px-4 py-2 text-sm font-black text-[#6f2232] hover:bg-[#e7d2ae]"}>{module.subject}</Link>)}

@@ -17,6 +17,7 @@ Aplicação móvel de revisões escolares. A interface, o motor de exercícios e
 
 - `/dashboard`: painel protegido por login para o responsável.
 - O painel pode ser filtrado por matéria ou exibir a visão consolidada.
+- `/dashboard/teste`: laboratório protegido que executa os exercícios sem telemetria, progresso local ou impacto nas estatísticas.
 - D1 armazena sessões e tentativas de forma centralizada.
 - Indicadores: último acesso, acertos diretos, tentativas, conclusões, duração e perguntas com maior dificuldade.
 - O aplicativo registra apenas dados pedagógicos do perfil `maya`; não coleta localização, contatos ou conteúdo externo.

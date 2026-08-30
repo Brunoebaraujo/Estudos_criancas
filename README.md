@@ -17,6 +17,7 @@ O código da versão publicada, incluindo telemetria e dashboard, está em [`sit
 - O módulo só é concluído quando todas as perguntas forem respondidas corretamente.
 - O progresso é salvo no navegador e as novas sessões enviam indicadores pedagógicos para o dashboard protegido.
 - O dashboard permite visão consolidada ou filtro por matéria.
+- O laboratório em `/dashboard/teste` permite conferir os exercícios sem salvar progresso nem alterar as estatísticas.
 
 ## Estrutura
 
