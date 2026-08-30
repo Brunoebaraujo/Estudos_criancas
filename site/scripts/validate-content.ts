@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { studyModuleRegistry } from "../content/registry";
+import { getStudyQuestion, studyModuleRegistry } from "../content/registry";
 import { shuffledCopy } from "../lib/shuffle";
 
 for (const studyModule of Object.values(studyModuleRegistry)) {
@@ -30,9 +30,11 @@ assert.ok(history.questions.some((question) => question.topic.includes("Concíli
 assert.ok(history.questions.some((question) => question.topic.includes("Calvinismo")), "Calvinismo não coberto");
 assert.ok(history.questions.some((question) => question.topic.includes("Absolutismo")), "Absolutismo não coberto");
 assert.ok(history.questions.some((question) => question.topic.includes("Guerra Civil")), "Guerra Civil Inglesa não coberta");
+assert.match(getStudyQuestion("RecHist2Tri26", "m06")?.prompt ?? "", /trono inglês|poder diretamente de Deus/i, "ID m06 de História deve resolver para uma pergunta de História");
 
 const math = studyModuleRegistry.RecMat2Tri26;
 assert.equal(math.questions.length, 46, "RecMat2Tri26 deve ter 46 desafios");
+assert.match(getStudyQuestion("RecMat2Tri26", "m06")?.prompt ?? "", /2x \+ 3/, "ID m06 de Matemática deve resolver para a pergunta de Matemática");
 for (const topic of [
   "Expressões algébricas", "Simplificação", "Equações", "Ideia de ângulo",
   "Minutos e segundos", "Bissetriz", "complementares", "suplementares",

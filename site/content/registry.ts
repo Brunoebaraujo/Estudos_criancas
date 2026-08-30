@@ -8,3 +8,7 @@ export const studyModuleRegistry: Record<string, StudyModule> = {
   [recMat2Tri26.id]: recMat2Tri26,
   [recPort2Tri26.id]: recPort2Tri26,
 };
+
+export function getStudyQuestion(moduleId: string, questionId: string) {
+  return studyModuleRegistry[moduleId]?.questions.find((question) => question.id === questionId);
+}

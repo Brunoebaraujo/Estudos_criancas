@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { studyModuleRegistry } from "@/content/registry";
+import { getStudyQuestion, studyModuleRegistry } from "@/content/registry";
 import { chatGPTSignOutPath } from "@/app/chatgpt-auth";
 import { getDashboardAccess } from "@/lib/admin-access";
 
@@ -60,6 +60,7 @@ async function getDashboardData() {
         AVG(response_ms) AS average_response_ms
       FROM answer_attempts WHERE student_id = 'maya'
       GROUP BY module_id, question_id, topic
+      HAVING SUM(CASE WHEN correct = 0 THEN 1 ELSE 0 END) > 0
       ORDER BY errors DESC, attempts DESC, question_id ASC
     `).all<DifficultyRow>(),
     db.prepare(`
@@ -148,7 +149,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const completedSessions = data.sessions.filter((session) => session.status === "completed").length;
   const totalMinutes = live.reduce((sum, session) => sum + (duration(session) ?? 0), 0);
   const lastActivity = data.sessions[0]?.last_activity_at ?? null;
-  const questionLookup = new Map(Object.values(studyModuleRegistry).flatMap((module) => module.questions.map((question) => [question.id, question])));
   const latest = data.sessions[0];
 
   return <main className="min-h-screen bg-[#f7efe1] pb-16 text-[#3f2a1e]">
@@ -176,7 +176,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
         <article className="rounded-3xl border border-[#d8c4a2] bg-[#fffdf8] p-5 sm:p-6"><div className="flex items-center gap-3"><BarChart3 className="size-6 text-[#6f2232]" /><div><p className="text-xs font-black uppercase tracking-[.14em] text-[#8a6247]">Diagnóstico</p><h3 className="font-serif text-2xl font-black">Perguntas com mais dificuldade</h3></div></div>
-          {data.difficulty.length ? <div className="mt-5 space-y-5">{data.difficulty.slice(0, 7).map((item) => { const question = questionLookup.get(item.question_id); const errors = number(item.errors); const attempts = number(item.attempts); return <div key={item.module_id + ":" + item.question_id}><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold leading-5">{question?.prompt ?? item.question_id}</p><p className="mt-1 text-xs text-[#846149]">{studyModuleRegistry[item.module_id]?.subject} · {item.topic}</p></div><span className="shrink-0 rounded-full bg-[#f4ddd5] px-3 py-1 text-xs font-black text-[#8b3834]">{errors} erro{errors === 1 ? "" : "s"}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eadbc2]"><div className="h-full rounded-full bg-[#a94c45]" style={{ width: `${attempts ? Math.max(8, (errors / attempts) * 100) : 0}%` }} /></div></div>; })}</div> : <EmptyState />}
+          {data.difficulty.length ? <div className="mt-5 space-y-5">{data.difficulty.slice(0, 7).map((item) => { const question = getStudyQuestion(item.module_id, item.question_id); const errors = number(item.errors); const attempts = number(item.attempts); return <div key={item.module_id + ":" + item.question_id}><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold leading-5">{question?.prompt ?? item.question_id}</p><p className="mt-1 text-xs text-[#846149]">{studyModuleRegistry[item.module_id]?.subject} · {item.topic}</p></div><span className="shrink-0 rounded-full bg-[#f4ddd5] px-3 py-1 text-xs font-black text-[#8b3834]">{errors} erro{errors === 1 ? "" : "s"}</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eadbc2]"><div className="h-full rounded-full bg-[#a94c45]" style={{ width: `${attempts ? Math.max(8, (errors / attempts) * 100) : 0}%` }} /></div></div>; })}</div> : <EmptyState />}
         </article>
 
         <article className="rounded-3xl border border-[#d8c4a2] bg-[#fffdf8] p-5 sm:p-6"><div className="flex items-center gap-3"><Brain className="size-6 text-[#6f2232]" /><div><p className="text-xs font-black uppercase tracking-[.14em] text-[#8a6247]">Leitura pedagógica</p><h3 className="font-serif text-2xl font-black">Como interpretar</h3></div></div><ul className="mt-5 space-y-4 text-sm leading-6 text-[#694b37]"><li><b>Acerto direto</b> significa resposta correta na primeira tentativa daquela sessão.</li><li><b>Tentativa extra</b> indica que a pergunta precisou voltar ao fim da fila.</li><li>Perguntas com muitos erros devem virar a prioridade da próxima conversa ou revisão.</li><li>O histórico importado preserva apenas totais conhecidos; não inventa horário nem resposta antiga.</li></ul></article>
