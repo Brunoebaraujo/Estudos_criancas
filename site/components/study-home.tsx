@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, BookOpen, Brain, Check, CheckCircle2, ChevronRight, CircleAlert,
-  Calculator, Clock3, Home, Lightbulb, Medal, RotateCcw, ScrollText, Sparkles, Target, X,
+  Calculator, Clock3, Home, Languages, Lightbulb, Medal, RotateCcw, ScrollText, Sparkles, Target, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -37,6 +37,8 @@ const kindLabels: Record<ChallengeKind, string> = {
   calculo: "Hora de calcular",
   problema: "Resolva o problema",
   "desafio-mental": "Desafio mental",
+  "analise-de-texto": "Análise de texto",
+  revisao: "Revisão linguística",
 };
 
 const DEFAULT_MODULE_ID = "RecHist2Tri26";
@@ -266,7 +268,7 @@ function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProg
             return (
               <article key={module.id} className="overflow-hidden rounded-[1.75rem] border border-[#d6bd93] bg-[#fffdf7] shadow-[0_18px_50px_rgba(81,54,35,.10)]">
                 <div className="relative h-44 overflow-hidden bg-gradient-to-br from-[#402431] via-[#6f2232] to-[#b7803e]">
-                  {module.coverImage ? <img src={module.coverImage} alt={module.coverAlt ?? ""} className="h-full w-full object-cover object-[50%_28%] opacity-75" /> : <Calculator className="absolute right-6 top-6 size-24 text-white/15" />}
+                  {module.coverImage ? <img src={module.coverImage} alt={module.coverAlt ?? ""} className="h-full w-full object-cover object-[50%_28%] opacity-75" /> : module.subject === "Matemática" ? <Calculator className="absolute right-6 top-6 size-24 text-white/15" /> : <Languages className="absolute right-6 top-6 size-24 text-white/15" />}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#302018] via-transparent to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-5 text-[#fff9eb]"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8c68c]">{module.subject} · {module.period}</p><h3 className="mt-1 font-serif text-2xl font-bold">{module.title}</h3></div>
                 </div>
@@ -364,8 +366,8 @@ function CompleteScreen({ module, progress, onHome, onRestart }: { module: Study
 }
 
 function SourcesScreen({ onBack }: { onBack: () => void }) {
-  return <main className="min-h-screen px-5 py-6"><section className="mx-auto max-w-2xl"><button onClick={onBack} className="mb-6 flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-5" /> Voltar ao menu</button><p className="eyebrow">Transparência</p><h1 className="mt-2 font-serif text-3xl font-black">Fontes dos módulos</h1><p className="mt-3 text-sm leading-6 text-[#674a36]">As perguntas seguem o conteúdo programático informado. História usa as páginas e o caderno enviados; Matemática usa conceitos e cálculos verificáveis do 7º ano, sem reproduzir exemplos não fornecidos do livro.</p>
-    <div className="mt-6 space-y-4"><SourceCard title="História — material didático da escola" body="Capítulo 3, pp. 48–53, 56–58, 60 e 62; Capítulo 4, pp. 80–82; anotações e exercícios do caderno enviados em 29/08/2026." /><SourceCard title="Matemática — conteúdo programático" body="Capítulo 5, pp. 114–129, exceto 118–119; Capítulo 6, pp. 136–155; Capítulo 7, pp. 160–177. Questões originais baseadas nos conceitos listados para o 7º ano." /><SourceCard title="Retratos históricos" body="Martinho Lutero (Lucas Cranach, 1529), João Calvino e Luís XIV (Hyacinthe Rigaud). Reproduções de obras em domínio público." links={[{ label: "Lutero — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Martin_Luther,_1529.jpg" }, { label: "Calvino — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Portrait_john_calvin.jpg" }, { label: "Luís XIV — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Louis_XIV_of_France.jpg" }]} /></div>
+  return <main className="min-h-screen px-5 py-6"><section className="mx-auto max-w-2xl"><button onClick={onBack} className="mb-6 flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-5" /> Voltar ao menu</button><p className="eyebrow">Transparência</p><h1 className="mt-2 font-serif text-3xl font-black">Fontes dos módulos</h1><p className="mt-3 text-sm leading-6 text-[#674a36]">As perguntas seguem o conteúdo programático informado. Quando as páginas do livro não foram fornecidas, os exercícios são originais e não são apresentados como reprodução da obra.</p>
+    <div className="mt-6 space-y-4"><SourceCard title="História — material didático da escola" body="Capítulo 3, pp. 48–53, 56–58, 60 e 62; Capítulo 4, pp. 80–82; anotações e exercícios do caderno enviados em 29/08/2026." /><SourceCard title="Matemática — conteúdo programático" body="Capítulo 5, pp. 114–129, exceto 118–119; Capítulo 6, pp. 136–155; Capítulo 7, pp. 160–177. Questões originais baseadas nos conceitos listados para o 7º ano." /><SourceCard title="Língua Portuguesa — conteúdo programático" body="PDF da recuperação do 2º trimestre: capítulos 3 a 6, transitividade, gêneros jornalísticos, coordenação, argumentação, referenciação e concordâncias nominal e verbal. Textos-base e questões foram criados exclusivamente para esta revisão; o livro não foi reproduzido." /><SourceCard title="Retratos históricos" body="Martinho Lutero (Lucas Cranach, 1529), João Calvino e Luís XIV (Hyacinthe Rigaud). Reproduções de obras em domínio público." links={[{ label: "Lutero — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Martin_Luther,_1529.jpg" }, { label: "Calvino — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Portrait_john_calvin.jpg" }, { label: "Luís XIV — Wikimedia Commons", href: "https://commons.wikimedia.org/wiki/File:Louis_XIV_of_France.jpg" }]} /></div>
     </section></main>;
 }
 

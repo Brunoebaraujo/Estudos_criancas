@@ -6,7 +6,9 @@ export type ChallengeKind =
   | "conexao"
   | "calculo"
   | "problema"
-  | "desafio-mental";
+  | "desafio-mental"
+  | "analise-de-texto"
+  | "revisao";
 
 export type QuestionOption = {
   id: string;

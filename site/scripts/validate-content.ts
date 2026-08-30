@@ -42,6 +42,22 @@ for (const topic of [
   assert.ok(math.questions.some((question) => question.topic.toLowerCase().includes(topic.toLowerCase())), `Matemática: tópico não coberto — ${topic}`);
 }
 
+const portuguese = studyModuleRegistry.RecPort2Tri26;
+assert.equal(portuguese.questions.length, 54, "RecPort2Tri26 deve ter 54 desafios");
+for (const topic of [
+  "Transitividade", "Objeto direto", "Objeto indireto", "Reportagem",
+  "Notícia e reportagem", "Período composto", "assindética", "aditiva",
+  "adversativa", "alternativa", "conclusiva", "explicativa", "Citação direta",
+  "Citação indireta", "Verbos de elocução", "Paráfrase", "Expressões referenciais",
+  "Carta do leitor", "Tema", "Fato e opinião", "Tese", "Argumento",
+  "Informação implícita", "Concordância nominal", "Bastante", "Meio e meia",
+  "É necessário", "É proibido", "Adjetivo e advérbio", "Concordância verbal",
+  "Sujeito composto anteposto", "Sujeito composto posposto", "Substantivo coletivo",
+  "Pronome de tratamento", "Datas", "Verbo haver", "Verbo fazer",
+]) {
+  assert.ok(portuguese.questions.some((question) => `${question.chapter} ${question.topic}`.toLowerCase().includes(topic.toLowerCase())), `Português: tópico não coberto — ${topic}`);
+}
+
 const sampleOptions = history.questions[0].options;
 const correctId = history.questions[0].correctOptionId;
 const sequence = (...values: number[]) => {
