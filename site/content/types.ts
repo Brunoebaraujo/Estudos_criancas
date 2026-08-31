@@ -33,6 +33,7 @@ export type StudyQuestion = {
 export type StudyModule = {
   id: string;
   subject: string;
+  navigationLabel?: string;
   period: string;
   title: string;
   subtitle: string;

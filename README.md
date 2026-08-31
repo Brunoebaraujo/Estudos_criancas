@@ -12,9 +12,11 @@ O código da versão publicada, incluindo telemetria e dashboard, está em [`sit
 - `RecHist2Tri26`: Reformas Religiosas e Monarquias Europeias, 7º ano.
 - `RecMat2Tri26`: Álgebra, Ângulos e Proporcionalidade, 7º ano.
 - `RecPort2Tri26`: Gramática, Gêneros e Argumentação, 7º ano.
+- `RecPortFoco2Tri26`: reforço direcionado pelos resultados da primeira rodada de Português.
 - 36 desafios de História baseados nas páginas do livro e nas anotações do caderno.
 - 46 desafios originais de Matemática baseados no conteúdo programático informado.
 - 54 desafios difíceis de Língua Portuguesa baseados no PDF programático da recuperação.
+- 24 desafios novos de Português concentrados nos tópicos que exigiram mais tentativas.
 - Uma pergunta errada recebe explicação e volta ao fim da fila.
 - O módulo só é concluído quando todas as perguntas forem respondidas corretamente.
 - O progresso é salvo no navegador e as novas sessões enviam indicadores pedagógicos para o dashboard protegido.
@@ -30,6 +32,7 @@ O código da versão publicada, incluindo telemetria e dashboard, está em [`sit
 - `site/content/rechist2tri26.ts`: perguntas e explicações do módulo.
 - `site/content/recmat2tri26.ts`: exercícios, respostas e explicações de Matemática.
 - `site/content/recport2tri26.ts`: exercícios, textos originais e explicações de Língua Portuguesa.
+- `site/content/recportfoco2tri26.ts`: reforço curto e direcionado de Língua Portuguesa.
 - `site/db/`: esquema das sessões e tentativas.
 - `site/public/manifest.webmanifest` e `site/public/sw.js`: instalação e funcionamento básico como PWA.
 

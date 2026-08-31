@@ -7,9 +7,11 @@ Aplicação móvel de revisões escolares. A interface, o motor de exercícios e
 - `RecHist2Tri26`: Reformas Religiosas e Monarquias Europeias, 7º ano.
 - `RecMat2Tri26`: Álgebra, Ângulos e Proporcionalidade, 7º ano.
 - `RecPort2Tri26`: Gramática, Gêneros e Argumentação, 7º ano.
+- `RecPortFoco2Tri26`: reforço direcionado pelos resultados da primeira rodada de Português.
 - 36 desafios de História baseados nas páginas do livro e nas anotações do caderno.
 - 46 desafios originais de Matemática cobrindo o conteúdo programático informado.
 - 54 desafios difíceis de Língua Portuguesa baseados no PDF programático da recuperação.
+- 24 desafios novos de Português concentrados em verbo haver, transitividade, concordância, interpretação, citação e coordenação.
 - Uma pergunta errada recebe explicação e volta ao fim da fila.
 - O módulo só é concluído quando todas as perguntas forem respondidas corretamente.
 - O progresso continua salvo no aparelho para permitir retomada e uso resiliente.
@@ -37,6 +39,7 @@ Aplicação móvel de revisões escolares. A interface, o motor de exercícios e
 - `content/rechist2tri26.ts`: perguntas e explicações do módulo.
 - `content/recmat2tri26.ts`: exercícios, respostas e explicações de Matemática.
 - `content/recport2tri26.ts`: exercícios, textos originais e explicações de Língua Portuguesa.
+- `content/recportfoco2tri26.ts`: reforço curto e direcionado de Língua Portuguesa.
 - `public/manifest.webmanifest` e `public/sw.js`: instalação e funcionamento básico como PWA.
 
 ## Adicionando uma nova matéria

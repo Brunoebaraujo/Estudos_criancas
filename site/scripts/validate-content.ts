@@ -60,6 +60,14 @@ for (const topic of [
   assert.ok(portuguese.questions.some((question) => `${question.chapter} ${question.topic}`.toLowerCase().includes(topic.toLowerCase())), `Português: tópico não coberto — ${topic}`);
 }
 
+const portugueseFocus = studyModuleRegistry.RecPortFoco2Tri26;
+assert.equal(portugueseFocus.questions.length, 24, "RecPortFoco2Tri26 deve ter 24 desafios");
+assert.ok(portugueseFocus.questions.filter((question) => question.topic.toLowerCase().includes("haver")).length >= 4, "Reforço deve dar peso especial ao verbo haver");
+assert.ok(portugueseFocus.questions.filter((question) => /transitiv|objeto/i.test(question.topic)).length >= 6, "Reforço deve dar peso especial à transitividade");
+for (const topic of ["Bastante", "É necessário", "É proibido", "Fato e opinião", "Informação implícita", "Citação direta", "assindética", "explicativa", "Sujeito simples", "Verbo fazer"]) {
+  assert.ok(portugueseFocus.questions.some((question) => question.topic.toLowerCase().includes(topic.toLowerCase())), `Reforço de Português: tópico não coberto — ${topic}`);
+}
+
 const sampleOptions = history.questions[0].options;
 const correctId = history.questions[0].correctOptionId;
 const sequence = (...values: number[]) => {
@@ -75,4 +83,5 @@ assert.deepEqual([...possibleCorrectPositions].sort(), [0, 1, 2], "a resposta co
 assert.deepEqual(sampleOptions, history.questions[0].options, "o embaralhamento não pode alterar o conteúdo original");
 
 const totalQuestions = Object.values(studyModuleRegistry).reduce((sum, module) => sum + module.questions.length, 0);
+assert.equal(totalQuestions, 160, "O catálogo deve conter 160 perguntas após o reforço direcionado");
 console.log(`Conteúdo validado: ${Object.keys(studyModuleRegistry).length} módulos, ${totalQuestions} perguntas, respostas aleatórias em A/B/C.`);
