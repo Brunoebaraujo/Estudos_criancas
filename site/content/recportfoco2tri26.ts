@@ -11,6 +11,8 @@ const FAIR_TEXT = "Texto-base criado para o reforço: Na sexta-feira, a escola a
 export const recPortFoco2Tri26: StudyModule = {
   id: "RecPortFoco2Tri26",
   subject: "Língua Portuguesa",
+  subjectId: "portugues",
+  collection: "Reforço · Setembro 2026",
   navigationLabel: "Português — Reforço",
   period: "2º trimestre de 2026",
   title: "Reforço direcionado de Português",

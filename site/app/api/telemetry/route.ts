@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { studyModuleRegistry } from "@/content/registry";
+import { studentFromRequest } from "@/lib/student-access";
 
-const STUDENT_ID = "maya";
 const SAFE_ID = /^[a-zA-Z0-9:_-]{1,180}$/;
 
 type Payload = Record<string, unknown>;
@@ -42,6 +42,9 @@ export async function POST(request: Request) {
   }
 
   const action = typeof payload.action === "string" ? payload.action : "";
+  const student = await studentFromRequest(request);
+  if (!student) return error("Aparelho não vinculado", 401);
+  const STUDENT_ID = student.id;
   const sessionId = asId(payload.sessionId);
   const studyModule = getModule(payload);
   if (!sessionId || !studyModule) return error("Sessão ou matéria inválida");
@@ -151,4 +154,24 @@ export async function POST(request: Request) {
     const message = caught instanceof Error ? caught.message : "Erro inesperado";
     return error(message.includes("no such table") ? "Base ainda não inicializada" : "Falha ao registrar atividade", 500);
   }
+}
+
+export async function GET(request: Request) {
+  const student = await studentFromRequest(request);
+  if (!student) return error("Aparelho não vinculado", 401);
+  const db = env.DB;
+  const [answers, completed] = await Promise.all([
+    db.prepare("SELECT module_id, question_id FROM answer_attempts WHERE student_id = ? AND correct = 1 GROUP BY module_id, question_id").bind(student.id).all<{ module_id: string; question_id: string }>(),
+    db.prepare("SELECT module_id FROM study_sessions WHERE student_id = ? AND status = 'completed' GROUP BY module_id").bind(student.id).all<{ module_id: string }>(),
+  ]);
+  const progress: Record<string, { mastered: string[]; completed: boolean }> = {};
+  for (const row of answers.results) {
+    progress[row.module_id] ??= { mastered: [], completed: false };
+    progress[row.module_id].mastered.push(row.question_id);
+  }
+  for (const row of completed.results) {
+    const studyModule = studyModuleRegistry[row.module_id];
+    if (studyModule) progress[row.module_id] = { mastered: studyModule.questions.map((q) => q.id), completed: true };
+  }
+  return Response.json({ profile: student, progress });
 }

@@ -7,6 +7,8 @@ const CH7 = "Conteúdo programático informado — Capítulo 7, pp. 160–177";
 export const recMat2Tri26: StudyModule = {
   id: "RecMat2Tri26",
   subject: "Matemática",
+  subjectId: "matematica",
+  collection: "Recuperação · Setembro 2026",
   period: "2º trimestre de 2026",
   title: "Álgebra, Ângulos e Proporcionalidade",
   subtitle: "Revisão de Matemática · 7º ano",

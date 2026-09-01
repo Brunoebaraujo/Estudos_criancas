@@ -13,6 +13,8 @@ const LETTER_TEXT = "Texto-base criado para a revisão: Senhor editor, a reporta
 export const recPort2Tri26: StudyModule = {
   id: "RecPort2Tri26",
   subject: "Língua Portuguesa",
+  subjectId: "portugues",
+  collection: "Recuperação · Setembro 2026",
   navigationLabel: "Português — Completa",
   period: "2º trimestre de 2026",
   title: "Gramática, Gêneros e Argumentação",

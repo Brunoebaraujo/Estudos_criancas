@@ -33,6 +33,8 @@ export type StudyQuestion = {
 export type StudyModule = {
   id: string;
   subject: string;
+  subjectId: string;
+  collection: string;
   navigationLabel?: string;
   period: string;
   title: string;

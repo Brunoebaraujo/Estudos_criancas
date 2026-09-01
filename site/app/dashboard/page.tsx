@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getStudyQuestion, studyModuleRegistry } from "@/content/registry";
 import { chatGPTSignOutPath } from "@/app/chatgpt-auth";
 import { getDashboardAccess } from "@/lib/admin-access";
+import { ProfileManager } from "@/components/profile-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ type DashboardData = { sessions: SessionRow[]; difficulty: DifficultyRow[]; atte
 
 function number(value: unknown) { return Number(value ?? 0); }
 
-async function getDashboardData() {
+async function getDashboardData(studentId: string) {
   const db = env.DB;
   if (!db) throw new Error("A base de acompanhamento ainda não está disponível.");
 
@@ -50,27 +51,27 @@ async function getDashboardData() {
     db.prepare(`
       SELECT id, module_id, source, status, started_at, last_activity_at, ended_at,
         total_questions, mastered_count, total_attempts, correct_answers, direct_correct
-      FROM study_sessions WHERE student_id = 'maya'
+      FROM study_sessions WHERE student_id = ?
       ORDER BY COALESCE(started_at, ended_at, last_activity_at) DESC LIMIT 100
-    `).all<SessionRow>(),
+    `).bind(studentId).all<SessionRow>(),
     db.prepare(`
       SELECT module_id, question_id, topic, COUNT(*) AS attempts,
         SUM(CASE WHEN correct = 0 THEN 1 ELSE 0 END) AS errors,
         SUM(CASE WHEN attempt_number = 1 AND correct = 1 THEN 1 ELSE 0 END) AS direct_correct,
         AVG(response_ms) AS average_response_ms
-      FROM answer_attempts WHERE student_id = 'maya'
+      FROM answer_attempts WHERE student_id = ?
       GROUP BY module_id, question_id, topic
       HAVING SUM(CASE WHEN correct = 0 THEN 1 ELSE 0 END) > 0
       ORDER BY errors DESC, attempts DESC, question_id ASC
-    `).all<DifficultyRow>(),
+    `).bind(studentId).all<DifficultyRow>(),
     db.prepare(`
       SELECT module_id, COUNT(*) AS attempts,
         SUM(CASE WHEN correct = 1 THEN 1 ELSE 0 END) AS correct,
         SUM(CASE WHEN attempt_number = 1 THEN 1 ELSE 0 END) AS first_attempts,
         SUM(CASE WHEN attempt_number = 1 AND correct = 1 THEN 1 ELSE 0 END) AS first_correct
-      FROM answer_attempts WHERE student_id = 'maya'
+      FROM answer_attempts WHERE student_id = ?
       GROUP BY module_id
-    `).all<AttemptSummary>(),
+    `).bind(studentId).all<AttemptSummary>(),
   ]);
 
   return {
@@ -109,19 +110,23 @@ function MetricCard({ icon, label, value, note }: { icon: React.ReactNode; label
   </article>;
 }
 
-export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ module?: string }> }) {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ module?: string; student?: string }> }) {
   const { authorized } = await getDashboardAccess("/dashboard");
 
   if (!authorized) return <main className="grid min-h-screen place-items-center bg-[#f6eddd] px-5"><section className="max-w-md rounded-3xl border border-[#d9c3a0] bg-white p-7 text-center shadow-xl"><ShieldCheck className="mx-auto size-12 text-[#6f2232]" /><h1 className="mt-4 font-serif text-3xl font-black">Acesso restrito</h1><p className="mt-3 text-sm leading-6 text-[#71523d]">Este painel contém o histórico escolar da Maya e está disponível somente para a conta responsável autorizada.</p><Link href="/" className="mt-6 inline-flex min-h-11 items-center gap-2 font-bold text-[#6f2232]"><ArrowLeft className="size-4" /> Voltar aos estudos</Link></section></main>;
 
+  const params = await searchParams;
+  const studentId = typeof params.student === "string" && /^[a-z0-9-]{1,80}$/i.test(params.student) ? params.student : "maya";
+  const student = await env.DB.prepare("SELECT name FROM student_profiles WHERE id = ?").bind(studentId).first<{ name: string }>().catch(() => null);
+  const studentName = student?.name ?? (studentId === "maya" ? "Maya" : "Criança");
   let rawData: DashboardData;
   try {
-    rawData = await getDashboardData();
+    rawData = await getDashboardData(studentId);
   } catch {
     rawData = { sessions: [], difficulty: [], attemptSummaries: [] };
   }
 
-  const requestedModule = (await searchParams).module;
+  const requestedModule = params.module;
   const selectedModuleId = requestedModule && studyModuleRegistry[requestedModule] ? requestedModule : "all";
   const selectedModule = selectedModuleId === "all" ? null : studyModuleRegistry[selectedModuleId];
   const data: DashboardData = {
@@ -152,15 +157,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const latest = data.sessions[0];
 
   return <main className="min-h-screen bg-[#f7efe1] pb-16 text-[#3f2a1e]">
-    <header className="border-b border-[#d8c4a2] bg-[#4d1e2a] px-5 py-6 text-[#fff9ed]"><div className="mx-auto flex max-w-6xl items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#e0bd82]">Acompanhamento responsável</p><h1 className="mt-1 font-serif text-2xl font-black sm:text-3xl">Painel de aprendizagem da Maya</h1></div><div className="flex gap-2"><Link href="/" aria-label="Voltar aos estudos" className="grid size-11 place-items-center rounded-2xl bg-white/10"><BookOpenCheck className="size-5" /></Link><a href={chatGPTSignOutPath("/")} aria-label="Sair" className="grid size-11 place-items-center rounded-2xl bg-white/10"><LogOut className="size-5" /></a></div></div></header>
+    <header className="border-b border-[#d8c4a2] bg-[#4d1e2a] px-5 py-6 text-[#fff9ed]"><div className="mx-auto flex max-w-6xl items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#e0bd82]">Acompanhamento responsável</p><h1 className="mt-1 font-serif text-2xl font-black sm:text-3xl">Painel de aprendizagem de {studentName}</h1></div><div className="flex gap-2"><Link href="/" aria-label="Voltar aos estudos" className="grid size-11 place-items-center rounded-2xl bg-white/10"><BookOpenCheck className="size-5" /></Link><a href={chatGPTSignOutPath("/")} aria-label="Sair" className="grid size-11 place-items-center rounded-2xl bg-white/10"><LogOut className="size-5" /></a></div></div></header>
 
     <div className="mx-auto max-w-6xl px-5 pt-7">
+      <ProfileManager selectedId={studentId} />
       <nav aria-label="Filtrar acompanhamento por matéria" className="mb-7 rounded-3xl border border-[#d8c4a2] bg-[#fffdf8] p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-xs font-black uppercase tracking-[.14em] text-[#846047]">Matéria acompanhada</p><Link href="/dashboard/teste" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#cfae7a] bg-[#fff8ea] px-3 text-xs font-black text-[#6f2232] hover:bg-[#f5e7ce]"><Beaker className="size-4" /> Testar exercícios</Link></div>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard" aria-current={selectedModuleId === "all" ? "page" : undefined} className={selectedModuleId === "all" ? "rounded-full bg-[#6f2232] px-4 py-2 text-sm font-black text-white" : "rounded-full bg-[#f1e2c8] px-4 py-2 text-sm font-black text-[#6f2232] hover:bg-[#e7d2ae]"}>Todas</Link>
-          {Object.values(studyModuleRegistry).map((module) => <Link key={module.id} href={"/dashboard?module=" + encodeURIComponent(module.id)} aria-current={selectedModuleId === module.id ? "page" : undefined} className={selectedModuleId === module.id ? "rounded-full bg-[#6f2232] px-4 py-2 text-sm font-black text-white" : "rounded-full bg-[#f1e2c8] px-4 py-2 text-sm font-black text-[#6f2232] hover:bg-[#e7d2ae]"}>{module.navigationLabel ?? module.subject}</Link>)}
-        </div>
+        <Link href={`/dashboard?student=${encodeURIComponent(studentId)}`} aria-current={selectedModuleId === "all" ? "page" : undefined} className={selectedModuleId === "all" ? "inline-block rounded-full bg-[#6f2232] px-4 py-2 text-sm font-black text-white" : "inline-block rounded-full bg-[#f1e2c8] px-4 py-2 text-sm font-black text-[#6f2232]"}>Todas as matérias</Link>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">{[...new Map(Object.values(studyModuleRegistry).map(module => [module.subjectId, module.subject])).entries()].map(([subjectId, subject]) => <div key={subjectId} className="rounded-2xl bg-[#f5ead6] p-3"><b className="text-sm">{subject}</b><div className="mt-2 border-l-2 border-[#c79b61] pl-2">{Object.values(studyModuleRegistry).filter(module => module.subjectId === subjectId).map(module => <Link key={module.id} href={`/dashboard?student=${encodeURIComponent(studentId)}&module=${encodeURIComponent(module.id)}`} aria-current={selectedModuleId === module.id ? "page" : undefined} className={selectedModuleId === module.id ? "mb-1 block rounded-lg bg-[#6f2232] px-3 py-2 text-xs font-black text-white" : "mb-1 block rounded-lg bg-white/70 px-3 py-2 text-xs font-black text-[#6f2232]"}>{module.collection}</Link>)}</div></div>)}</div>
       </nav>
 
       <section className="mb-7 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-sm font-bold text-[#8c6447]">{selectedModule ? selectedModule.subject : "Visão geral"}</p><h2 className="font-serif text-3xl font-black">{selectedModule ? selectedModule.title : "O que aconteceu nas revisões"}</h2></div><p className="text-sm text-[#795a44]">Última atividade: <b>{formatDate(lastActivity)}</b></p></section>

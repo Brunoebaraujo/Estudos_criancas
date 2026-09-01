@@ -3,6 +3,8 @@ import type { StudyModule } from "./types";
 export const recHist2Tri26: StudyModule = {
   id: "RecHist2Tri26",
   subject: "História",
+  subjectId: "historia",
+  collection: "Recuperação · Setembro 2026",
   period: "2º trimestre de 2026",
   title: "Reformas Religiosas e Monarquias Europeias",
   subtitle: "Recuperação de História · 2º trimestre de 2026",

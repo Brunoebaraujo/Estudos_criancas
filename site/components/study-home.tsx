@@ -14,7 +14,8 @@ import { studyModules } from "@/content/modules";
 import { shuffledCopy } from "@/lib/shuffle";
 import { finishStudySession, importLegacyProgress, recordStudyAttempt, startStudySession } from "@/lib/telemetry";
 
-const STORAGE_KEY = "estudos-criancas-progress-v1";
+const STORAGE_PREFIX = "estudos-criancas-progress-v2";
+type StudentProfile = { id: string; name: string; schoolYear: string | null; avatar: string };
 
 type ModuleProgress = {
   mastered: string[];
@@ -53,7 +54,8 @@ function emptyProgress(module: StudyModule): ModuleProgress {
   };
 }
 
-export function StudyHome() {
+export function StudyHome({ profile, preview = false, initialProgress = {} }: { profile: StudentProfile; preview?: boolean; initialProgress?: SavedProgress }) {
+  const storageKey = `${STORAGE_PREFIX}:${profile.id}`;
   const [selectedModuleId, setSelectedModuleId] = useState(DEFAULT_MODULE_ID);
   const activeModule = studyModuleRegistry[selectedModuleId];
   const [allProgress, setAllProgress] = useState<SavedProgress>({});
@@ -77,24 +79,40 @@ export function StudyHome() {
   useEffect(() => { moduleRef.current = activeModule; }, [activeModule]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(() => { void (async () => {
       try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        const parsed: SavedProgress = raw ? JSON.parse(raw) : {};
-        setAllProgress(parsed);
-        if (parsed[DEFAULT_MODULE_ID]) setProgress(parsed[DEFAULT_MODULE_ID]);
-        for (const [moduleId, saved] of Object.entries(parsed)) {
+        const raw = window.localStorage.getItem(storageKey) ?? (profile.id === "maya" ? window.localStorage.getItem("estudos-criancas-progress-v1") : null);
+        const parsed: SavedProgress = preview ? initialProgress : (raw ? JSON.parse(raw) : {});
+        let merged = parsed;
+        const token = window.localStorage.getItem("estudos-criancas-device-token-v1");
+        if (token && !preview) {
+          const response = await fetch("/api/telemetry", { headers: { authorization: `Bearer ${token}` } });
+          if (response.ok) {
+            const remote = (await response.json() as { progress?: Record<string, { mastered: string[]; completed: boolean }> }).progress ?? {};
+            merged = { ...parsed };
+            for (const [moduleId, remoteProgress] of Object.entries(remote)) {
+              const studyModule = studyModuleRegistry[moduleId];
+              if (!studyModule) continue;
+              const local = parsed[moduleId] ?? emptyProgress(studyModule);
+              const mastered = [...new Set([...local.mastered, ...remoteProgress.mastered])];
+              merged[moduleId] = { ...local, mastered, queue: studyModule.questions.map(q => q.id).filter(id => !mastered.includes(id)), completed: remoteProgress.completed || mastered.length === studyModule.questions.length };
+            }
+          }
+        }
+        setAllProgress(merged);
+        if (merged[DEFAULT_MODULE_ID]) setProgress(merged[DEFAULT_MODULE_ID]);
+        for (const [moduleId, saved] of Object.entries(merged)) {
           const studyModule = studyModuleRegistry[moduleId];
-          if (studyModule && saved.updatedAt) void importLegacyProgress(moduleId, studyModule.questions.length, saved);
+          if (!preview && studyModule && saved.updatedAt) void importLegacyProgress(moduleId, studyModule.questions.length, saved);
         }
       } catch {
         setAllProgress({});
       }
       setReady(true);
-    }, 0);
+    })(); }, 0);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => undefined);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [initialProgress, preview, profile.id, storageKey]);
 
   useEffect(() => {
     const pauseActiveSession = () => {
@@ -117,7 +135,7 @@ export function StudyHome() {
     const updated = { ...allProgress, [activeModule.id]: normalized };
     setProgress(normalized);
     setAllProgress(updated);
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch { /* private mode can reject storage */ }
+    if (!preview) try { window.localStorage.setItem(storageKey, JSON.stringify(updated)); } catch { /* private mode can reject storage */ }
   }
 
   function openModule(moduleId: string) {
@@ -136,7 +154,7 @@ export function StudyHome() {
       persist(fresh);
       nextProgress = fresh;
     }
-    const sessionId = startStudySession(activeModule.id, activeModule.questions.length);
+    const sessionId = preview ? `preview-${crypto.randomUUID()}` : startStudySession(activeModule.id, activeModule.questions.length);
     sessionIdRef.current = sessionId;
     progressRef.current = nextProgress;
     questionStartedAtRef.current = Date.now();
@@ -159,7 +177,7 @@ export function StudyHome() {
     progressRef.current = nextProgress;
     const sessionId = sessionIdRef.current ?? startStudySession(activeModule.id, activeModule.questions.length);
     sessionIdRef.current = sessionId;
-    const attemptRequest = recordStudyAttempt({
+    const attemptRequest = preview ? Promise.resolve(true) : recordStudyAttempt({
       sessionId,
       moduleId: activeModule.id,
       questionId: currentQuestion.id,
@@ -222,7 +240,7 @@ export function StudyHome() {
 
   if (!ready) return <main className="grid min-h-screen place-items-center bg-[#fbf6ea]"><p className="font-serif text-xl font-bold text-[#6f2232]">Abrindo os livros…</p></main>;
 
-  if (screen === "home") return <HomeScreen allProgress={allProgress} onOpen={openModule} onSources={() => setScreen("sources")} />;
+  if (screen === "home") return <HomeScreen profile={profile} preview={preview} allProgress={allProgress} onOpen={openModule} onSources={() => setScreen("sources")} />;
   if (screen === "sources") return <SourcesScreen onBack={() => setScreen("home")} />;
   if (screen === "intro") return <IntroScreen module={activeModule} progress={progress} onBack={() => setScreen("home")} onBegin={begin} onReset={resetModule} />;
   if (screen === "question" && currentQuestion) return (
@@ -235,17 +253,19 @@ export function StudyHome() {
     <ReviewBreak fact={activeModule.reviewFacts[reviewIndex]} onContinue={() => { setFeedback(null); questionStartedAtRef.current = Date.now(); setScreen("question"); }} />
   );
   if (screen === "complete") return <CompleteScreen module={activeModule} progress={progress} onHome={() => setScreen("home")} onRestart={resetModule} />;
-  return <HomeScreen allProgress={allProgress} onOpen={openModule} onSources={() => setScreen("sources")} />;
+  return <HomeScreen profile={profile} preview={preview} allProgress={allProgress} onOpen={openModule} onSources={() => setScreen("sources")} />;
 }
 
-function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProgress; onOpen: (moduleId: string) => void; onSources: () => void }) {
+function HomeScreen({ profile, preview, allProgress, onOpen, onSources }: { profile: StudentProfile; preview: boolean; allProgress: SavedProgress; onOpen: (moduleId: string) => void; onSources: () => void }) {
+  const subjects = [...new Map(studyModules.map((module) => [module.subjectId, module.subject])).entries()];
   return (
     <main className="min-h-screen overflow-hidden pb-12">
       <header className="relative border-b border-amber-900/10 bg-[#f7edda] px-5 pb-10 pt-8">
         <div className="paper-dots absolute inset-0 opacity-[0.07]" />
         <div className="relative mx-auto max-w-5xl">
+          {preview && <div className="mb-5 rounded-2xl bg-[#fff0bd] p-3 text-sm font-bold text-[#714c19]">Visualização do responsável: nada feito aqui altera o progresso.</div>}
           <div className="mb-7 flex items-center justify-between">
-            <Brand />
+            <Brand profile={profile} />
             <div className="flex gap-2"><a href="/dashboard" className="rounded-full border border-[#caa56b]/50 bg-white/55 px-3 py-2 text-xs font-bold text-[#6f2232]">Acompanhamento</a><button onClick={onSources} className="rounded-full border border-[#caa56b]/50 bg-white/55 px-3 py-2 text-xs font-bold text-[#6f2232]">Fontes</button></div>
           </div>
           <div className="max-w-2xl">
@@ -260,17 +280,20 @@ function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProg
           <div><p className="eyebrow">Biblioteca</p><h2 id="modules-heading" className="mt-1 font-serif text-2xl font-bold">Matérias disponíveis</h2></div>
           <BookOpen className="size-7 text-[#b7803e]" />
         </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          {studyModules.map((module) => {
+        <div className="space-y-7">
+          {subjects.map(([subjectId, subject]) => <section key={subjectId} className="rounded-[2rem] border border-[#d6bd93] bg-[#f3e4c9]/55 p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-3"><span className="grid size-10 place-items-center rounded-2xl bg-[#6f2232] text-white">{subjectId === "matematica" ? <Calculator className="size-5" /> : subjectId === "portugues" ? <Languages className="size-5" /> : <ScrollText className="size-5" />}</span><div><p className="eyebrow">Matéria</p><h3 className="font-serif text-2xl font-black">{subject}</h3></div></div>
+            <div className="ml-5 border-l-2 border-[#c69a61] pl-4"><div className="grid gap-4 md:grid-cols-2">
+          {studyModules.filter((module) => module.subjectId === subjectId).map((module) => {
             const saved = allProgress[module.id];
             const mastered = saved?.mastered?.length ?? 0;
             const modulePercent = Math.round((mastered / module.questionCount) * 100);
             return (
               <article key={module.id} className="overflow-hidden rounded-[1.75rem] border border-[#d6bd93] bg-[#fffdf7] shadow-[0_18px_50px_rgba(81,54,35,.10)]">
-                <div className="relative h-44 overflow-hidden bg-gradient-to-br from-[#402431] via-[#6f2232] to-[#b7803e]">
+                <div className="relative h-40 overflow-hidden bg-gradient-to-br from-[#402431] via-[#6f2232] to-[#b7803e]">
                   {module.coverImage ? <img src={module.coverImage} alt={module.coverAlt ?? ""} className="h-full w-full object-cover object-[50%_28%] opacity-75" /> : module.subject === "Matemática" ? <Calculator className="absolute right-6 top-6 size-24 text-white/15" /> : <Languages className="absolute right-6 top-6 size-24 text-white/15" />}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#302018] via-transparent to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5 text-[#fff9eb]"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8c68c]">{module.subject} · {module.period}</p><h3 className="mt-1 font-serif text-2xl font-bold">{module.title}</h3></div>
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-[#fff9eb]"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#e8c68c]">{module.collection}</p><h4 className="mt-1 font-serif text-2xl font-bold">{module.title}</h4></div>
                 </div>
                 <div className="p-5">
                   <p className="text-sm leading-6 text-[#6c4d39]">{module.description}</p>
@@ -285,15 +308,15 @@ function HomeScreen({ allProgress, onOpen, onSources }: { allProgress: SavedProg
                 </div>
               </article>
             );
-          })}
+          })}</div></div></section>)}
         </div>
       </section>
     </main>
   );
 }
 
-function Brand() {
-  return <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-[#6f2232] text-[#fff7e8]"><BookOpen className="size-6" /></span><div><p className="font-serif text-xl font-bold leading-none">Estudos da Maya</p><p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a38]">7º ano</p></div></div>;
+function Brand({ profile }: { profile: StudentProfile }) {
+  return <div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-[#6f2232] text-[#fff7e8]"><BookOpen className="size-6" /></span><div><p className="font-serif text-xl font-bold leading-none">Estudos de {profile.name}</p><p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#8a5a38]">{profile.schoolYear ?? "Meu perfil"}</p></div></div>;
 }
 
 function IntroScreen({ module, progress, onBack, onBegin, onReset }: { module: StudyModule; progress: ModuleProgress; onBack: () => void; onBegin: () => void; onReset: () => void }) {

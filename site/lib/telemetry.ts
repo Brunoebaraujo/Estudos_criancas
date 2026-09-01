@@ -1,5 +1,5 @@
-const PROFILE_ID = "maya";
 const LEGACY_SYNC_KEY = "estudos-criancas-analytics-import-v1";
+const DEVICE_TOKEN_KEY = "estudos-criancas-device-token-v1";
 
 type LegacyProgress = {
   mastered: string[];
@@ -16,14 +16,17 @@ function makeId(prefix: string) {
 }
 
 async function sendTelemetry(payload: Record<string, unknown>, useBeacon = false) {
-  const body = JSON.stringify({ ...payload, studentId: PROFILE_ID });
+  const body = JSON.stringify(payload);
+  const token = window.localStorage.getItem(DEVICE_TOKEN_KEY);
+  if (!token) return false;
   try {
     if (useBeacon && navigator.sendBeacon) {
-      return navigator.sendBeacon("/api/telemetry", new Blob([body], { type: "application/json" }));
+      // sendBeacon cannot attach the device authorization header.
+      useBeacon = false;
     }
     const response = await fetch("/api/telemetry", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
       body,
       keepalive: true,
     });

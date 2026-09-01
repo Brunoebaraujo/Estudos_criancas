@@ -29,3 +29,31 @@ export const answerAttempts = sqliteTable("answer_attempts", {
   responseMs: integer("response_ms").notNull().default(0),
   answeredAt: text("answered_at").notNull(),
 });
+
+export const studentProfiles = sqliteTable("student_profiles", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  schoolYear: text("school_year"),
+  avatar: text("avatar").notNull().default("book"),
+  createdAt: text("created_at").notNull(),
+  archivedAt: text("archived_at"),
+});
+
+export const studentDevices = sqliteTable("student_devices", {
+  id: text("id").primaryKey(),
+  studentId: text("student_id").notNull().references(() => studentProfiles.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  label: text("label"),
+  createdAt: text("created_at").notNull(),
+  lastUsedAt: text("last_used_at").notNull(),
+  revokedAt: text("revoked_at"),
+});
+
+export const pairingCodes = sqliteTable("pairing_codes", {
+  id: text("id").primaryKey(),
+  studentId: text("student_id").notNull().references(() => studentProfiles.id),
+  codeHash: text("code_hash").notNull().unique(),
+  createdAt: text("created_at").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  usedAt: text("used_at"),
+});

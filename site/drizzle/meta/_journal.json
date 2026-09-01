@@ -8,6 +8,13 @@
       "when": 1788042125463,
       "tag": "0000_round_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788280547387,
+      "tag": "0001_third_amazoness",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
-import { StudyHome } from "@/components/study-home";
+import { StudentGate } from "@/components/student-gate";
 
 export default function Home() {
-  return <StudyHome />;
+  return <StudentGate />;
 }
